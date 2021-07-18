@@ -16,10 +16,12 @@ namespace ProductCatalogAPI
         public static void Main(string[] args)
         {
             var host = CreateHostBuilder(args).Build();
-            var scope = host.Services.CreateScope();
-            var serviceProviders = scope.ServiceProvider;
-            var context = serviceProviders.GetRequiredService<CatalogContext>();
-            CatalogSeed.Seed(context);
+            using (var scope = host.Services.CreateScope())
+            {
+                var serviceProviders = scope.ServiceProvider;
+                var context = serviceProviders.GetRequiredService<CatalogContext>();
+                CatalogSeed.Seed(context);
+            }
             host.Run();
         }
 
