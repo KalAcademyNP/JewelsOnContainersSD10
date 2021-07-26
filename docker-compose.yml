@@ -16,6 +16,7 @@ services:
       DatabaseName: CatalogDb
       DatabaseUser: sa
       DatabasePassword: ProductApi(!)
+      ExternalCatalogUrl: http://localhost:7000
     ports:
       - "7000:80"
     container_name: jewelscatalogapi
