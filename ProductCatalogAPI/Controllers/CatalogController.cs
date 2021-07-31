@@ -47,6 +47,56 @@ namespace ProductCatalogAPI.Controllers
             return Ok(model);
         }
 
+
+        [HttpGet("[action]/type/{catalogTypeId}/brand/{catalogBrandId}")]
+        public async Task<IActionResult> Items(
+            int? catalogTypeId,
+            int? catalogBrandId,
+            [FromQuery]int pageIndex = 0,
+            [FromQuery]int pageSize = 6)
+        {
+            var query = (IQueryable<CatalogItem>)_context.Catalog;
+            if (catalogTypeId.HasValue)
+            {
+                query = query.Where(c => c.CatalogTypeId == catalogTypeId);
+            }
+            if (catalogBrandId.HasValue)
+            {
+                query = query.Where(c => c.CatalogBrandId == catalogBrandId);
+            }
+
+            var itemsCount = query.LongCountAsync();
+            var items = await query
+                .OrderBy(c => c.Name)
+                .Skip(pageIndex * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            items = ChangePictureUrl(items);
+            var model = new PaginatedItemsViewModel
+            {
+                PageIndex = pageIndex,
+                PageSize = items.Count,
+                Count = itemsCount.Result,
+                Data = items
+            };
+            return Ok(model);
+        }
+
+        [HttpGet("[action]")]
+        public async Task<IActionResult> CatalogTypes()
+        {
+            var types = await _context.CatalogTypes.ToListAsync();
+            return Ok(types);
+        }
+
+        [HttpGet("[action]")]
+        public async Task<IActionResult> CatalogBrands()
+        {
+            var brands = await _context.CatalogBrands.ToListAsync();
+            return Ok(brands);
+        }
+
         private List<CatalogItem> ChangePictureUrl(List<CatalogItem> items)
         {
             items.ForEach(item =>
