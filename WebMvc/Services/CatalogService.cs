@@ -18,7 +18,7 @@ namespace WebMvc.Services
 
         public CatalogService(IConfiguration config, IHttpClient client)
         {
-            _baseUrl = $"{config["CatalogUrl"]}/api/catalog";
+            _baseUrl = $"{config["CatalogUrl"]}/api/catalog/";
             _client = client;
         }
         public async Task<IEnumerable<SelectListItem>> GetBrandsAsync()
