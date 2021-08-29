@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
+using MassTransit;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -10,6 +11,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using OrderApi.Data;
+using Common.Messaging;
 using OrderApi.Models;
 
 namespace OrderApi.Controllers
@@ -24,14 +26,16 @@ namespace OrderApi.Controllers
         private readonly IConfiguration _config;
 
         private readonly ILogger<OrdersController> _logger;
+        private IPublishEndpoint _bus;
 
         public OrdersController(OrdersContext ordersContext,
             ILogger<OrdersController> logger,
-            IConfiguration config)
+            IConfiguration config, IPublishEndpoint bus)
         {
             _config = config;
             _logger = logger;
             _ordersContext = ordersContext;
+            _bus = bus;
         }
 
         [HttpGet("{id}", Name = "GetOrder")]
@@ -84,6 +88,7 @@ namespace OrderApi.Controllers
             try
             {
                 await _ordersContext.SaveChangesAsync();
+                _bus.Publish(new OrderCompletedEvent(order.BuyerId)).Wait();
                 return Ok(new { order.OrderId });
             }
             catch(DbUpdateException ex)

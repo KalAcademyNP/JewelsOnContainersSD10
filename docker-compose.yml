@@ -45,6 +45,35 @@ services:
     depends_on:
       - tokenserver
       - basket.data
+      - rabbitmq
+
+  order:
+    build:
+      context: .\OrderApi
+      dockerfile: Dockerfile
+    image: jewels/orderapi
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "200k"
+        max-file: "10"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      IdentityUrl: http://192.168.1.30:7800
+      DatabaseServer: mssqlserver
+      DatabaseName: OrdersDb
+      DatabaseUser: sa
+      DatabasePassword: ProductApi(!)
+    ports:
+      - "7020:80"
+    container_name: orderapi
+    networks:
+      - backend
+      - frontend
+    depends_on:
+      - mssqlserver
+      - tokenserver
+      - rabbitmq
       
   webmvc:
     image: jewels/webmvc
@@ -57,6 +86,9 @@ services:
       IdentityUrl: http://192.168.1.30:7800
       CallBackUrl: http://localhost:7500
       CartUrl: http://cart
+      OrderUrl: http://order
+      StripePublicKey: pk_test_jZlpubvlPmcV6QJPReImelQy
+      StripePrivateKey: sk_test_bSHT9qxwjpyCOP0qdAvHLfAA
     ports:
       - "7500:80"
     container_name: webshop
@@ -66,6 +98,7 @@ services:
       - catalog
       - tokenserver
       - cart
+      - order
 
   tokenserver:
     build:
@@ -113,3 +146,16 @@ services:
     container_name: basketdata
     networks:
       - backend
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    hostname: myrabbitmq
+    ports:
+      - "15672:15672"
+      - "5672:5672"
+      - "5671:5671"
+    volumes:
+      - ~/rabbitmq:/var/lib/rabbitmq/mnesia   
+    networks:
+      - backend 
